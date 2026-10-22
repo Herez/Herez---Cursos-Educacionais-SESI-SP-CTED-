@@ -102,4 +102,4 @@ A aplicação é dividida em dois componentes principais: uma API RESTful em C#/
 ---
 
 ## 8. Limitações Conhecidas
-- Gerenciamento de cadastro, edição ou exclusão de cursos (CRUD administrativo) não implementado por não fazer parte do escopo definido pelas instruções.
+- Gerenciamento de cadastro, edição ou exclusão de cursos (CRUD administrativo) não implementado por não fazer parte do escopo definido pelas solicitações iniciais do projeto.
