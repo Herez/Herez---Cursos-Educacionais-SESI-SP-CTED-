@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Cursos - CTED / SESI-SP</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .badge-aberto { background-color: #DEF7EC; color: #03543F; }
+        .badge-andamento { background-color: #E1EFFE; color: #1E429F; }
+        .badge-encerrado { background-color: #FDE8E8; color: #9B1C1C; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-red-700 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-red-700 font-bold px-3 py-1 rounded text-xl">SESI</div>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">Catálogo de Cursos</h1>
+                    <p class="text-xs text-red-200">Centro de Tecnologias e Educação Digital (CTED)</p>
+                </div>
+            </div>
+            <span class="text-sm bg-red-800 px-3 py-1 rounded-full text-red-100">Ambiente Moodle (Simulação)</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+
+        <!-- Filtros e Busca -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8" aria-label="Filtros de pesquisa">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Pesquisa e Filtros</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                
+                <!-- Pesquisa Texto -->
+                <div>
+                    <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Buscar por nome</label>
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Ex: Programação, Gestão..." class="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Categoria -->
+                <div>
+                    <label for="filter-categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select id="filter-categoria" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <option value="">Todas as Categorias</option>
+                        <option value="Tecnologia">Tecnologia</option>
+                        <option value="Gestão">Gestão</option>
+                        <option value="Design">Design</option>
+                    </select>
+                </div>
+
+                <!-- Modalidade -->
+                <div>
+                    <label for="filter-modalidade" class="block text-sm font-medium text-gray-700 mb-1">Modalidade</label>
+                    <select id="filter-modalidade" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <option value="">Todas as Modalidades</option>
+                        <option value="EAD">EAD</option>
+                        <option value="Presencial">Presencial</option>
+                    </select>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="filter-status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="filter-status" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <option value="">Todos os Status</option>
+                        <option value="Inscrições Abertas">Inscrições Abertas</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Encerrado">Encerrado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botão Limpar Filtros e Contador -->
+            <div class="flex flex-col sm:flex-row justify-between items-center pt-2 border-t border-gray-100 gap-3">
+                <span id="results-count" class="text-sm font-medium text-gray-600">Carregando cursos...</span>
+                <button id="clear-btn" class="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1 focus:outline-none">
+                    <i class="fa-solid fa-rotate-left"></i> Limpar Filtros
+                </button>
+            </div>
+        </section>
+
+        <!-- Container de Cards / Feedback -->
+        <section>
+            <!-- Loading -->
+            <div id="loading-state" class="text-center py-12">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-red-600 mb-3"></i>
+                <p class="text-gray-500">Buscando cursos no servidor...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg text-center my-6">
+                <i class="fa-solid fa-triangle-exclamation text-2xl mb-2 text-red-500"></i>
+                <p class="font-semibold">Ocorreu um erro ao carregar os cursos.</p>
+                <p class="text-sm mt-1">Por favor, verifique a conexão com o servidor ou tente novamente mais tarde.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+                <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                <h3 class="text-lg font-medium text-gray-700">Nenhum curso encontrado</h3>
+                <p class="text-gray-500 text-sm mt-1">Tente ajustar seus critérios de pesquisa ou filtros.</p>
+            </div>
+
+            <!-- Grid de Cursos -->
+            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+                <!-- Os cards de curso serão inseridos dinamicamente aqui -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Detalhes do Curso -->
+    <div id="course-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-xl">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold" aria-label="Fechar modal">&times;</button>
+            
+            <div id="modal-content">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-6 mt-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center text-sm">
+            <p>&copy; 2026 CTED - Centro de Tecnologias e Educação Digital | SESI-SP</p>
+            <p class="text-xs text-gray-400 mt-1">Aplicação desenvolvida para o Processo Seletivo - Desenvolvedor de Sistemas I</p>
+        </div>
+    </footer>
+
+    <!-- Lógica Front-End -->
+    <script>
+        // Dados Fictícios Mapeados (Atendendo ao Requisito de Mínimos: 6 cursos, 3 categorias, 2 modalidades, 3 status)
+        const mockCursos = [
+            {
+                id: 1,
+                nomeCompleto: "Desenvolvimento Web Fullstack com C# e .NET Core",
+                nomeBreve: "Web .NET Core",
+                descricao: "Aprenda a construir aplicações web completas e modernas utilizando C#, ASP.NET Core e banco de dados relacional.",
+                categoria: "Tecnologia",
+                modalidade: "EAD",
+                cargaHoraria: 120,
+                publicoAlvo: "Estudantes e profissionais de tecnologia",
+                status: "Inscrições Abertas",
+                imagemUrl: "https://picsum.photos/seed/dotnet/400/220",
+                dataDisponibilizacao: "2026-03-01"
+            },
+            {
+                id: 2,
+                nomeCompleto: "Gestão Ágil de Projetos de Software com Scrum e Kanban",
+                nomeBreve: "Gestão Ágil",
+                descricao: "Domine as principais metodologias ágeis utilizadas no mercado corporativo para otimizar entregas e liderar equipes.",
+                categoria: "Gestão",
+                modalidade: "EAD",
+                cargaHoraria: 60,
+                publicoAlvo: "Gerentes de projetos, líderes técnicos e coordenadores",
+                status: "Em Andamento",
+                imagemUrl: "https://picsum.photos/seed/agile/400/220",
+                dataDisponibilizacao: "2026-02-15"
+            },
+            {
+                id: 3,
+                nomeCompleto: "UX/UI Design: Fundamentos da Experiência do Usuário",
+                nomeBreve: "UX/UI Design",
+                descricao: "Conceitos de arquitetura de informação, prototipagem no Figma e testes de usabilidade para interfaces digitais.",
+                categoria: "Design",
+                modalidade: "Presencial",
+                cargaHoraria: 80,
+                publicoAlvo: "Designers, desenvolvedores front-end e entusiastas",
+                status: "Inscrições Abertas",
+                imagemUrl: "https://picsum.photos/seed/design/400/220",
+                dataDisponibilizacao: "2026-04-10"
+            },
+            {
+                id: 4,
+                nomeCompleto: "Banco de Dados Relacional e SQL Avançado",
+                nomeBreve: "SQL Avançado",
+                descricao: "Modelagem de dados, otimização de consultas, procedures, views e gestão de performance em SGBDs open-source.",
+                categoria: "Tecnologia",
+                modalidade: "EAD",
+                cargaHoraria: 40,
+                publicoAlvo: "Desenvolvedores e analistas de dados",
+                status: "Encerrado",
+                imagemUrl: "https://picsum.photos/seed/database/400/220",
+                dataDisponibilizacao: "2026-01-10"
+            },
+            {
+                id: 5,
+                nomeCompleto: "Liderança Eficaz no Ambiente Industrial 4.0",
+                nomeBreve: "Liderança 4.0",
+                descricao: "Desenvolvimento de competências comportamentais, comunicação assertiva e gestão de conflitos no setor produtivo.",
+                categoria: "Gestão",
+                modalidade: "Presencial",
+                cargaHoraria: 30,
+                publicoAlvo: "Supervisores e encarregados da indústria",
+                status: "Inscrições Abertas",
+                imagemUrl: "https://picsum.photos/seed/leadership/400/220",
+                dataDisponibilizacao: "2026-05-01"
+            },
+            {
+                id: 6,
+                nomeCompleto: "Design System e Componentização Front-end",
+                nomeBreve: "Design Systems",
+                descricao: "Criação de bibliotecas de componentes escaláveis e alinhadas entre design e desenvolvimento web.",
+                categoria: "Design",
+                modalidade: "EAD",
+                cargaHoraria: 50,
+                publicoAlvo: "Front-end Developers e Product Designers",
+                status: "Em Andamento",
+                imagemUrl: "https://picsum.photos/seed/components/400/220",
+                dataDisponibilizacao: "2026-02-01"
+            }
+        ];
+
+        // Estado da Aplicação
+        let todosOsCursos = [];
+
+        // Elementos DOM
+        const searchInput = document.getElementById('search-input');
+        const filterCategoria = document.getElementById('filter-categoria');
+        const filterModalidade = document.getElementById('filter-modalidade');
+        const filterStatus = document.getElementById('filter-status');
+        const clearBtn = document.getElementById('clear-btn');
+        const resultsCount = document.getElementById('results-count');
+        const coursesGrid = document.getElementById('courses-grid');
+        const loadingState = document.getElementById('loading-state');
+        const errorState = document.getElementById('error-state');
+        const emptyState = document.getElementById('empty-state');
+        const modal = document.getElementById('course-modal');
+        const modalContent = document.getElementById('modal-content');
+        const closeModal = document.getElementById('close-modal');
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarCursos();
+
+            // Event Listeners para Filtros
+            searchInput.addEventListener('input', aplicarFiltros);
+            filterCategoria.addEventListener('change', aplicarFiltros);
+            filterModalidade.addEventListener('change', aplicarFiltros);
+            filterStatus.addEventListener('change', aplicarFiltros);
+            clearBtn.addEventListener('click', limparFiltros);
+            closeModal.addEventListener('click', fecharModal);
+        });
+
+        // Simulação de Chamada à API
+        function carregarCursos() {
+            loadingState.classList.remove('hidden');
+            coursesGrid.classList.add('hidden');
+            errorState.classList.add('hidden');
+
+            setTimeout(() => {
+                try {
+                    todosOsCursos = mockCursos;
+                    loadingState.classList.add('hidden');
+                    coursesGrid.classList.remove('hidden');
+                    aplicarFiltros();
+                } catch (err) {
+                    loadingState.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                }
+            }, 600); // Pequeno delay sintético para demonstrar estado de loading
+        }
+
+        // Aplicação de Filtros Combinados
+        function aplicarFiltros() {
+            const texto = searchInput.value.toLowerCase().trim();
+            const cat = filterCategoria.value;
+            const mod = filterModalidade.value;
+            const st = filterStatus.value;
+
+            const filtrados = todosOsCursos.filter(curso => {
+                const matchTexto = curso.nomeCompleto.toLowerCase().includes(texto) || curso.descricao.toLowerCase().includes(texto);
+                const matchCat = cat === "" || curso.categoria === cat;
+                const matchMod = mod === "" || curso.modalidade === mod;
+                const matchSt = st === "" || curso.status === st;
+
+                return matchTexto && matchCat && matchMod && matchSt;
+            });
+
+            renderizarCursos(filtrados);
+        }
+
+        // Renderização dos Cards
+        function renderizarCursos(cursos) {
+            resultsCount.textContent = `Exibindo ${cursos.length} curso(s) encontrado(s)`;
+
+            if (cursos.length === 0) {
+                coursesGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            coursesGrid.classList.remove('hidden');
+
+            coursesGrid.innerHTML = cursos.map(curso => {
+                let badgeClass = 'badge-aberto';
+                if (curso.status === 'Em Andamento') badgeClass = 'badge-andamento';
+                if (curso.status === 'Encerrado') badgeClass = 'badge-encerrado';
+
+                return `
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                        <div>
+                            <img src="${curso.imagemUrl}" alt="${curso.nomeCompleto}" class="w-full h-40 object-cover">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-2 gap-2">
+                                    <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-gray-700">${curso.categoria}</span>
+                                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${badgeClass}">${curso.status}</span>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg mb-1 leading-snug line-clamp-2">${curso.nomeCompleto}</h3>
+                                <p class="text-xs text-gray-500 mb-3"><i class="fa-regular fa-clock"></i> ${curso.cargaHoraria}h | ${curso.modalidade}</p>
+                                <p class="text-sm text-gray-600 line-clamp-3 mb-4">${curso.descricao}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 pb-5 pt-0">
+                            <button onclick="verDetalhes(${curso.id})" class="w-full bg-red-700 hover:bg-red-800 text-white text-sm font-medium py-2 rounded transition flex items-center justify-center gap-2">
+                                Ver Detalhes <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Limpeza de Filtros
+        function limparFiltros() {
+            searchInput.value = '';
+            filterCategoria.value = '';
+            filterModalidade.value = '';
+            filterStatus.value = '';
+            aplicarFiltros();
+        }
+
+        // Modal de Detalhes
+        function verDetalhes(id) {
+            const curso = todosOsCursos.find(c => c.id === id);
+            if (!curso) return;
+
+            modalContent.innerHTML = `
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded bg-red-100 text-red-800">${curso.categoria}</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded bg-gray-100 text-gray-800">${curso.modalidade}</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">${curso.nomeCompleto}</h2>
+                <p class="text-sm text-gray-500 mb-4"><strong>Nome Breve:</strong> ${curso.nomeBreve}</p>
+                
+                <img src="${curso.imagemUrl}" alt="${curso.nomeCompleto}" class="w-full h-56 object-cover rounded-lg mb-4">
+
+                <div class="space-y-3 text-sm text-gray-700">
+                    <p><strong>Descrição:</strong> ${curso.descricao}</p>
+                    <p><strong>Público-alvo:</strong> ${curso.publicoAlvo}</p>
+                    <p><strong>Carga Horária:</strong> ${curso.cargaHoraria} horas</p>
+                    <p><strong>Status da Oferta:</strong> ${curso.status}</p>
+                    ${curso.dataDisponibilizacao ? `<p><strong>Data de Disponibilização:</strong> ${new Date(curso.dataDisponibilizacao).toLocaleDateString('pt-BR')}</p>` : ''}
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            modal.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
